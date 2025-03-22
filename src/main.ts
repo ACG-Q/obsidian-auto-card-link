@@ -57,6 +57,10 @@ export default class ObsidianAutoCardLink extends Plugin {
     this.addSettingTab(new ObsidianAutoCardLinkSettingTab(this.app, this));
   }
 
+  /**
+   * 增强选中的URL为卡片链接
+   * @param editor - 编辑器实例
+   */
   private enhanceSelectedURL(editor: Editor): void {
     const selectedText = (
       EditorExtensions.getSelectedText(editor) || ""
@@ -64,6 +68,7 @@ export default class ObsidianAutoCardLink extends Plugin {
 
     const codeBlockGenerator = new CodeBlockGenerator(editor);
 
+    // 遍历选中的文本行处理URL
     for (const line of selectedText.split(/[\n ]/)) {
       if (CheckIf.isUrl(line)) {
         codeBlockGenerator.convertUrlToCodeBlock(line);
@@ -74,14 +79,18 @@ export default class ObsidianAutoCardLink extends Plugin {
     }
   }
 
+  /**
+   * 手动粘贴并增强剪贴板中的URL为卡片链接
+   * @param editor - 编辑器实例
+   */
   private async manualPasteAndEnhanceURL(editor: Editor): Promise<void> {
-    // if no clipboardText, do nothing
+    // 检查剪贴板内容是否为空
     const clipboardText = await navigator.clipboard.readText();
     if (clipboardText == null || clipboardText == "") {
       return;
     }
 
-    // if offline, just paste
+    // 离线时直接粘贴原始内容
     if (!navigator.onLine) {
       editor.replaceSelection(clipboardText);
       return;
@@ -90,7 +99,7 @@ export default class ObsidianAutoCardLink extends Plugin {
     console.log(clipboardText);
     console.log(CheckIf.isUrl(clipboardText));
 
-    // If not URL, just paste
+    // 非URL内容直接粘贴
     if (!CheckIf.isUrl(clipboardText) || CheckIf.isImage(clipboardText)) {
       editor.replaceSelection(clipboardText);
       return;
@@ -101,32 +110,36 @@ export default class ObsidianAutoCardLink extends Plugin {
     return;
   }
 
+  /**
+   * 处理编辑器粘贴事件
+   * @param evt - 剪贴板事件对象
+   * @param editor - 编辑器实例
+   */
   private onPaste = async (
     evt: ClipboardEvent,
     editor: Editor
   ): Promise<void> => {
-    // if enhanceDefaultPaste is false, do nothing
+    // 如果未启用增强粘贴功能则直接返回
     if (!this.settings?.enhanceDefaultPaste) return;
 
-    // if offline, do nothing
+    // 离线状态下不处理
     if (!navigator.onLine) return;
 
     if (evt.clipboardData == null) return;
 
-    // If clipboardData includes any files, we return false to allow the default paste handler to take care of it.
+    // 如果剪贴板包含文件，则交由默认处理器处理
     if (evt.clipboardData.files.length > 0) return;
 
     const clipboardText = evt.clipboardData.getData("text/plain");
     if (clipboardText == null || clipboardText == "") return;
 
-    // If its not a URL, we return false to allow the default paste handler to take care of it.
-    // Similarly, image urls don't have a meaningful attribute so downloading it
-    // to fetching metadata is a waste of bandwidth.
+    // 非URL或图片链接由默认处理器处理
+    // 图片URL缺乏有效元数据，避免网络请求浪费
     if (!CheckIf.isUrl(clipboardText) || CheckIf.isImage(clipboardText)) {
       return;
     }
 
-    // We've decided to handle the paste, stop propagation to the default handler.
+    // 我已经决定处理粘贴，停止默认处理
     evt.stopPropagation();
     evt.preventDefault();
 
@@ -135,10 +148,16 @@ export default class ObsidianAutoCardLink extends Plugin {
     return;
   };
 
+  /**
+   * 处理编辑器菜单项的创建与事件绑定
+   * @param menu - 编辑器菜单实例，用于添加自定义菜单项
+   * @returns void 本函数无返回值
+   */
   private onEditorMenu = (menu: Menu) => {
-    // if showInMenuItem setting is false, now showing menu item
+    // 根据设置决定是否显示整个菜单模块
     if (!this.settings?.showInMenuItem) return;
 
+    // 添加"粘贴URL并转换为卡片链接"菜单项
     menu.addItem((item: MenuItem) => {
       item
         .setTitle("Paste URL and enhance to card link")
@@ -150,9 +169,10 @@ export default class ObsidianAutoCardLink extends Plugin {
         });
     });
 
-    // if offline, not showing "Enhance selected URL to card link" item
+    // 离线状态下跳过网络相关功能菜单的创建
     if (!navigator.onLine) return;
 
+    // 添加"将选中URL转换为卡片链接"菜单项
     menu.addItem((item: MenuItem) => {
       item
         .setTitle("Enhance selected URL to card link")
