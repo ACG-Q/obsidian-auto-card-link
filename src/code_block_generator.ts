@@ -3,6 +3,7 @@ import { Editor, Notice, requestUrl } from "obsidian";
 import { LinkMetadata } from "src/interfaces";
 import { EditorExtensions } from "src/editor_enhancements";
 import { LinkMetadataParser } from "src/link_metadata_parser";
+import { LANGUAGE_TAG } from "./config";
 
 export class CodeBlockGenerator {
   editor: Editor;
@@ -11,6 +12,17 @@ export class CodeBlockGenerator {
     this.editor = editor;
   }
 
+    /**
+   * 将给定URL转换为代码块格式的引用内容
+   * 
+   * 函数流程：
+   * 1. 生成占位文本并立即显示在编辑器中（提供即时反馈）
+   * 2. 异步获取链接元数据
+   * 3. 根据获取结果进行内容替换或错误回退
+   * 
+   * @param url - 需要转换的目标网页地址
+   * @returns Promise<void> 异步操作，无返回值
+   */
   async convertUrlToCodeBlock(url: string): Promise<void> {
     const selectedText = this.editor.getSelection();
 
@@ -46,13 +58,14 @@ export class CodeBlockGenerator {
     this.editor.replaceRange(this.genCodeBlock(linkMetadata), startPos, endPos);
   }
 
+
   /**
    * 生成卡片式代码块文本
    * @param linkMetadata - 包含链接元数据的对象
    * @returns 格式化后的代码块字符串
    */
-  genCodeBlock(linkMetadata: LinkMetadata): string {
-    const codeBlockTexts = ["\n```cardlink"];
+  static genCodeBlock(linkMetadata: LinkMetadata): string {
+    const codeBlockTexts = [`\n\`\`\`${LANGUAGE_TAG}`];
     codeBlockTexts.push(`url: ${linkMetadata.url}`);
     codeBlockTexts.push(`title: "${linkMetadata.title}"`);
     if (linkMetadata.description)
@@ -66,11 +79,15 @@ export class CodeBlockGenerator {
   }
 
   /**
-   * 获取链接元数据
-   * @param url - 要获取元数据的URL
-   * @returns 解析后的元数据对象或undefined
+   * 生成卡片式代码块文本
+   * @param linkMetadata - 包含链接元数据的对象
+   * @returns 格式化后的代码块字符串
    */
-  private async fetchLinkMetadata(url: string): Promise<LinkMetadata | undefined> {
+  genCodeBlock(linkMetadata: LinkMetadata): string {
+    return CodeBlockGenerator.genCodeBlock(linkMetadata)
+  }
+
+  static async fetchLinkMetadata(url: string): Promise<LinkMetadata | undefined> {
     const res = await (async () => {
       try {
         return requestUrl({ url });
@@ -86,6 +103,15 @@ export class CodeBlockGenerator {
 
     const parser = new LinkMetadataParser(url, res.text);
     return parser.parse();
+  }
+
+  /**
+   * 获取链接元数据
+   * @param url - 要获取元数据的URL
+   * @returns 解析后的元数据对象或undefined
+   */
+  private async fetchLinkMetadata(url: string): Promise<LinkMetadata | undefined> {
+    return await CodeBlockGenerator.fetchLinkMetadata(url);
   }
 
 

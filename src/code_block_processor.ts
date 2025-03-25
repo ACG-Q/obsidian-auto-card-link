@@ -1,33 +1,36 @@
-import { App, parseYaml, Notice, ButtonComponent, getLinkPath } from "obsidian";
-
+import { App, parseYaml, Notice, ButtonComponent, getLinkPath, requestUrl, Editor, MarkdownView } from "obsidian";
 import { YamlParseError, NoRequiredParamsError } from "src/errors";
 import { LinkMetadata } from "src/interfaces";
 import { CheckIf } from "./checkif";
+import { CodeBlockGenerator } from "./code_block_generator";
 
 /**
  * 卡片链接代码块处理器
  */
 export class CodeBlockProcessor {
   app: App;
+  source: string;
+  changeValue: (content:string)=>void;
 
   /**
    * 创建处理器实例
    * @param app - Obsidian应用实例 
    */
-  constructor(app: App) {
+  constructor(app: App, source: string, changeValue: (content:string)=>void) {
     this.app = app;
+    this.source = source;
+    this.changeValue = changeValue;
   }
 
   /**
    * 执行链接卡片生成流程
-   * @param source - YAML格式的链接元数据字符串，包含生成卡片所需的基础信息
    * @param el - 目标DOM容器元素，用于挂载生成的卡片元素或错误提示
    * @returns Promise<void> 异步操作，无直接返回值
    */
-  async run(source: string, el: HTMLElement) {
+  async run(el: HTMLElement) {
     try {
       // 解析YAML元数据并生成链接卡片元素
-      const data = this.parseLinkMetadataFromYaml(source);
+      const data = this.parseLinkMetadataFromYaml(this.source);
       el.appendChild(this.genLinkEl(data));
     } catch (error) {
       // 错误处理流程：根据错误类型展示不同的用户提示
@@ -48,13 +51,7 @@ export class CodeBlockProcessor {
     }
   }
 
-  /**
-   * 从YAML解析链接元数据
-   * @param source - 原始YAML格式字符串
-   * @returns 结构化的链接元数据
-   * @throws YamlParseError | NoRequiredParamsError
-   */
-  private parseLinkMetadataFromYaml(source: string): LinkMetadata {
+  static parseLinkMetadataFromYaml(source: string): LinkMetadata {
     let yaml: Partial<LinkMetadata>;
 
     let indent = -1;
@@ -95,6 +92,16 @@ export class CodeBlockProcessor {
       image: yaml.image,
       indent,
     };
+  }
+
+  /**
+   * 从YAML解析链接元数据
+   * @param source - 原始YAML格式字符串
+   * @returns 结构化的链接元数据
+   * @throws YamlParseError | NoRequiredParamsError
+   */
+  private parseLinkMetadataFromYaml(source: string): LinkMetadata {
+    return CodeBlockProcessor.parseLinkMetadataFromYaml(source);
   }
 
   /**
@@ -194,9 +201,14 @@ export class CodeBlockProcessor {
       thumbnailEl.setAttr("draggable", "false");
       cardEl.appendChild(thumbnailEl);
     }
+
+    // 按钮容器
+    const buttonContainerEl = containerEl.createDiv({
+      cls: "auto-card-link-buttons",
+    });
   
     // 创建并配置复制URL的按钮组件
-    new ButtonComponent(containerEl)
+    new ButtonComponent(buttonContainerEl)
       .setClass("auto-card-link-copy-url")
       .setClass("clickable-icon")
       .setIcon("copy")
@@ -205,9 +217,32 @@ export class CodeBlockProcessor {
         navigator.clipboard.writeText(data.url);
         new Notice("URL copied to your clipboard");
       });
+
+    // 添加刷新按钮
+    new ButtonComponent(buttonContainerEl)
+      .setClass("auto-card-link-refresh")
+      .setClass("clickable-icon")
+      .setIcon("refresh-cw")
+      .setTooltip("Refresh metadata")
+      .onClick(async () => {
+        const newData = await this.refreshMetadata(data.url);
+        if (newData) {
+          this.changeValue(this.genCodeBlock(newData))
+          containerEl.empty();
+          // todo: 清除原本的this.source
+        }
+      });
   
     return containerEl;
   }
+  async refreshMetadata(url: string) {
+    return await CodeBlockGenerator.fetchLinkMetadata(url);
+  }
+
+  private genCodeBlock(linkMetadata: LinkMetadata): string {
+    return CodeBlockGenerator.genCodeBlock(linkMetadata)
+  }
+
 
   /**
    * 获取本地图片资源路径

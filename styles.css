@@ -115,7 +115,7 @@
     /* Prevent clash with edit block button */
     .is-live-preview .auto-card-link-container:hover &,
     .is-live-preview .block-language-cardlink:has(+ .edit-block-button:hover) &  {
-      margin-right: var(--auto-card-link-button-width);
+        margin-right: var(--auto-card-link-button-width);
     }
 }
 
@@ -143,7 +143,7 @@
     /* Prevent clash with copy url button */
     .auto-card-link-container:hover &,
     .is-mobile .auto-card-link-container & {
-      margin-right: var(--auto-card-link-button-width);
+        margin-right: var(--auto-card-link-button-width);
     }
 
     &:hover {
@@ -167,14 +167,26 @@
     pointer-events: none;
 }
 
-.auto-card-link-copy-url {
+.auto-card-link-buttons {
     position: absolute;
     right: var(--size-2-2);
     bottom: var(--size-2-2);
     z-index: 1;
 
+    display: flex;
+    flex-direction: row;
+    column-gap: 5px;
+
     /* Show copy button only on hover on desktop */
     .obsidian-app:not(.is-mobile) .auto-card-link-container:not(:hover) & {
-      display: none;
+        display: none;
+    }
+
+    &>.auto-card-link-refresh {
+        z-index: 1;
+    }
+
+    &>.auto-card-link-copy-url {
+        z-index: 1;
     }
 }

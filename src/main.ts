@@ -1,4 +1,4 @@
-import { Plugin, MarkdownView, Editor, Menu, MenuItem } from "obsidian";
+import { Plugin, MarkdownView, Editor, Menu, MenuItem, Notice } from "obsidian";
 
 import {
   ObsidianAutoCardLinkSettings,
@@ -10,6 +10,7 @@ import { CheckIf } from "src/checkif";
 import { CodeBlockGenerator } from "src/code_block_generator";
 import { CodeBlockProcessor } from "src/code_block_processor";
 import { linkRegex } from "src/regex";
+import { LANGUAGE_TAG } from "./config";
 
 export default class ObsidianAutoCardLink extends Plugin {
   settings?: ObsidianAutoCardLinkSettings;
@@ -17,9 +18,34 @@ export default class ObsidianAutoCardLink extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    this.registerMarkdownCodeBlockProcessor("cardlink", async (source, el) => {
-      const processor = new CodeBlockProcessor(this.app);
-      await processor.run(source, el);
+    this.registerMarkdownCodeBlockProcessor(LANGUAGE_TAG, async (source, el, ctx) => {
+      try {
+        const sectionInfo = ctx.getSectionInfo(el);
+        if (!sectionInfo) return;
+
+        // 获取当前 Markdown 编辑器
+        const editor = this.getEditor();
+        if (!editor) return;
+
+        // 计算代码块的文本范围
+        const doc = editor.getDoc();
+        const lastLine = doc.lastLine();
+        const fromLine = Math.max(sectionInfo.lineStart - 1, 0);
+        const toLine = Math.min(sectionInfo.lineEnd + 1, lastLine);
+
+        const from = { line: fromLine, ch: 0 };
+        const to = { line: toLine, ch: 0 };
+        const changeValue = (content:string) => {
+          editor.replaceRange(content, from, to);
+          new Notice("🔄 Card Link Metadata Refreshed");
+        }
+
+        const processor = new CodeBlockProcessor(this.app, source, changeValue);
+        await processor.run(el);
+      } catch (err:any) {
+        new Notice(`🚨 Processor Error: ${err.message}`);
+        console.error("CodeBlockProcessor Error:", err);
+      }
     });
 
     this.addCommand({
