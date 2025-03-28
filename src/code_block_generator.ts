@@ -1,15 +1,22 @@
-import { Editor, Notice, requestUrl } from "obsidian";
-
+import { Editor, MarkdownView, Notice, requestUrl } from "obsidian";
 import { LinkMetadata } from "src/interfaces";
 import { EditorExtensions } from "src/editor_enhancements";
-import { LinkMetadataParser } from "src/link_metadata_parser";
+import { LinkMetadataParser, ImageAttachmentSaverCallback } from "src/link_metadata_parser";
 import { LANGUAGE_TAG } from "./config";
+import { ObsidianAutoCardLinkSettings } from "./settings";
+import { createDownloadImageToAttachmentFolder } from "./utils/path";
 
 export class CodeBlockGenerator {
-  editor: Editor;
+  view: MarkdownView;
+  settings: ObsidianAutoCardLinkSettings;
+  editor?: Editor;
+  saveImageToAttachment: ImageAttachmentSaverCallback;
 
-  constructor(editor: Editor) {
+  constructor(editor: Editor, view: MarkdownView,settings: ObsidianAutoCardLinkSettings) {
+    this.view = view;
     this.editor = editor;
+    this.settings = settings;
+    this.saveImageToAttachment = createDownloadImageToAttachmentFolder(view)
   }
 
     /**
@@ -24,6 +31,7 @@ export class CodeBlockGenerator {
    * @returns Promise<void> 异步操作，无返回值
    */
   async convertUrlToCodeBlock(url: string): Promise<void> {
+    if(!this.editor) return;
     const selectedText = this.editor.getSelection();
 
     // 生成唯一ID用于后续查找/替换操作
@@ -73,7 +81,7 @@ export class CodeBlockGenerator {
     if (linkMetadata.host) codeBlockTexts.push(`host: ${linkMetadata.host}`);
     if (linkMetadata.favicon)
       codeBlockTexts.push(`favicon: ${linkMetadata.favicon}`);
-    if (linkMetadata.image) codeBlockTexts.push(`image: ${linkMetadata.image}`);
+    if (linkMetadata.image) codeBlockTexts.push(`image: "${linkMetadata.image}"`);
     codeBlockTexts.push("```\n");
     return codeBlockTexts.join("\n");
   }
@@ -87,7 +95,7 @@ export class CodeBlockGenerator {
     return CodeBlockGenerator.genCodeBlock(linkMetadata)
   }
 
-  static async fetchLinkMetadata(url: string): Promise<LinkMetadata | undefined> {
+  static async fetchLinkMetadata(url: string, saveFunc: ImageAttachmentSaverCallback, settings: ObsidianAutoCardLinkSettings): Promise<LinkMetadata | undefined> {
     const res = await (async () => {
       try {
         return requestUrl({ url });
@@ -101,7 +109,7 @@ export class CodeBlockGenerator {
       return;
     }
 
-    const parser = new LinkMetadataParser(url, res.text);
+    const parser = new LinkMetadataParser(url, res.text, saveFunc, settings);
     return parser.parse();
   }
 
@@ -111,7 +119,7 @@ export class CodeBlockGenerator {
    * @returns 解析后的元数据对象或undefined
    */
   private async fetchLinkMetadata(url: string): Promise<LinkMetadata | undefined> {
-    return await CodeBlockGenerator.fetchLinkMetadata(url);
+    return await CodeBlockGenerator.fetchLinkMetadata(url, this.saveImageToAttachment, this.settings);
   }
 
 

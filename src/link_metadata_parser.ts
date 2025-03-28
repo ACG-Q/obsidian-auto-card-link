@@ -1,11 +1,26 @@
+import { requestUrl } from "obsidian";
 import { LinkMetadata } from "src/interfaces";
+import { ObsidianAutoCardLinkSettings } from "./settings";
+
+export type ImageAttachmentSaverCallback = (url: string, fileName: string) => Promise<string>;
+
 
 export class LinkMetadataParser {
   url: string;
+  title: string;
   htmlDoc: Document;
+  settings?: ObsidianAutoCardLinkSettings;
+  /**
+   * 保存图片到附件里面
+   */
+  saveImageToAttachment: ImageAttachmentSaverCallback;
 
-  constructor(url: string, htmlText: string) {
+  constructor(url: string, htmlText: string, saveImageToAttachment: ImageAttachmentSaverCallback, settings?: ObsidianAutoCardLinkSettings) {
     this.url = url;
+    this.settings = settings;
+    this.saveImageToAttachment = saveImageToAttachment;
+
+    this.title = ""
 
     const parser = new DOMParser();
     const htmlDoc = parser.parseFromString(htmlText, "text/html");
@@ -36,6 +51,7 @@ export class LinkMetadataParser {
       .replace(/"/g, '\\"')
       .trim();
     if (!title) return;
+    this.title = title;
 
     // 清理并规范化描述：处理方式与标题相同
     const description = this.getDescription()
@@ -146,6 +162,11 @@ export class LinkMetadataParser {
 
     // 当检测到有效图片URL时进行标准化处理
     if (ogImage) return await this.fixImageUrl(ogImage);
+
+    // 如果没有有效图片, 并且存在screenshotApiKey,那么就使用screenshotmachine.com进行截图
+    if (this.settings?.screenshotApiKey) {
+      return await this.getScreenshotUrl(this.url);
+    }
   }
 
   /**
@@ -198,5 +219,20 @@ export class LinkMetadataParser {
     }
 
     return image;
+  }
+
+  /**
+   * 获取网页截图
+   */
+  private async getScreenshotUrl(url: string): Promise<string> {
+    let screenshotExtraParam = this.settings?.screenshotExtraParam;
+    let apiUrl = `https://api.screenshotmachine.com?key=${this.settings!.screenshotApiKey}&url=${url}`
+    if(screenshotExtraParam && screenshotExtraParam.length > 0) apiUrl += this.settings?.screenshotExtraParam;
+
+    console.log(`url: ${apiUrl}\nfile: ${this.title}`)
+
+    let fileName = `${this.title}.png`
+
+    return await this.saveImageToAttachment(apiUrl, fileName);
   }
 }

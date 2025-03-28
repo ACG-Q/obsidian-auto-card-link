@@ -1,4 +1,4 @@
-import { Plugin, MarkdownView, Editor, Menu, MenuItem, Notice } from "obsidian";
+import { Plugin, MarkdownView, Editor, Menu, MenuItem, Notice, App } from "obsidian";
 
 import {
   ObsidianAutoCardLinkSettings,
@@ -11,6 +11,7 @@ import { CodeBlockGenerator } from "src/code_block_generator";
 import { CodeBlockProcessor } from "src/code_block_processor";
 import { linkRegex } from "src/regex";
 import { LANGUAGE_TAG } from "./config";
+import { getEditor } from "./utils/command";
 
 export default class ObsidianAutoCardLink extends Plugin {
   settings?: ObsidianAutoCardLinkSettings;
@@ -24,7 +25,7 @@ export default class ObsidianAutoCardLink extends Plugin {
         if (!sectionInfo) return;
 
         // 获取当前 Markdown 编辑器
-        const editor = this.getEditor();
+        const editor = getEditor(this.app);
         if (!editor) return;
 
         // 计算代码块的文本范围
@@ -40,7 +41,7 @@ export default class ObsidianAutoCardLink extends Plugin {
           new Notice("🔄 Card Link Metadata Refreshed");
         }
 
-        const processor = new CodeBlockProcessor(this.app, source, changeValue);
+        const processor = new CodeBlockProcessor(this.app, source, changeValue, this.settings!);
         await processor.run(el);
       } catch (err:any) {
         new Notice(`🚨 Processor Error: ${err.message}`);
@@ -51,8 +52,8 @@ export default class ObsidianAutoCardLink extends Plugin {
     this.addCommand({
       id: "auto-card-link-paste-and-enhance",
       name: "Paste URL and enhance to card link",
-      editorCallback: async (editor: Editor) => {
-        await this.manualPasteAndEnhanceURL(editor);
+      editorCallback: async (editor: Editor, view: MarkdownView) => {
+        await this.manualPasteAndEnhanceURL(editor, view);
       },
       hotkeys: [],
     });
@@ -60,13 +61,13 @@ export default class ObsidianAutoCardLink extends Plugin {
     this.addCommand({
       id: "auto-card-link-enhance-selected-url",
       name: "Enhance selected URL to card link",
-      editorCheckCallback: (checking: boolean, editor: Editor) => {
+      editorCheckCallback: (checking: boolean, editor: Editor, view: MarkdownView) => {
         // if offline, not showing command
         if (!navigator.onLine) return false;
 
         if (checking) return true;
 
-        this.enhanceSelectedURL(editor);
+        this.enhanceSelectedURL(editor, view);
       },
       hotkeys: [
         {
@@ -87,12 +88,14 @@ export default class ObsidianAutoCardLink extends Plugin {
    * 增强选中的URL为卡片链接
    * @param editor - 编辑器实例
    */
-  private enhanceSelectedURL(editor: Editor): void {
+  private enhanceSelectedURL(editor: Editor, view: MarkdownView): void {
     const selectedText = (
       EditorExtensions.getSelectedText(editor) || ""
     ).trim();
 
-    const codeBlockGenerator = new CodeBlockGenerator(editor);
+    console.log("test1", view)
+
+    const codeBlockGenerator = new CodeBlockGenerator(editor, view, this.settings!);
 
     // 遍历选中的文本行处理URL
     for (const line of selectedText.split(/[\n ]/)) {
@@ -109,7 +112,7 @@ export default class ObsidianAutoCardLink extends Plugin {
    * 手动粘贴并增强剪贴板中的URL为卡片链接
    * @param editor - 编辑器实例
    */
-  private async manualPasteAndEnhanceURL(editor: Editor): Promise<void> {
+  private async manualPasteAndEnhanceURL(editor: Editor, view: MarkdownView): Promise<void> {
     // 检查剪贴板内容是否为空
     const clipboardText = await navigator.clipboard.readText();
     if (clipboardText == null || clipboardText == "") {
@@ -131,7 +134,9 @@ export default class ObsidianAutoCardLink extends Plugin {
       return;
     }
 
-    const codeBlockGenerator = new CodeBlockGenerator(editor);
+    console.log("test2", view)
+
+    const codeBlockGenerator = new CodeBlockGenerator(editor, view, this.settings!);
     await codeBlockGenerator.convertUrlToCodeBlock(clipboardText);
     return;
   }
@@ -143,7 +148,8 @@ export default class ObsidianAutoCardLink extends Plugin {
    */
   private onPaste = async (
     evt: ClipboardEvent,
-    editor: Editor
+    editor: Editor,
+    markdownView: MarkdownView
   ): Promise<void> => {
     // 如果未启用增强粘贴功能则直接返回
     if (!this.settings?.enhanceDefaultPaste) return;
@@ -169,7 +175,9 @@ export default class ObsidianAutoCardLink extends Plugin {
     evt.stopPropagation();
     evt.preventDefault();
 
-    const codeBlockGenerator = new CodeBlockGenerator(editor);
+    console.log("test3", markdownView)
+
+    const codeBlockGenerator = new CodeBlockGenerator(editor, markdownView, this.settings!);
     await codeBlockGenerator.convertUrlToCodeBlock(clipboardText);
     return;
   };
@@ -179,7 +187,7 @@ export default class ObsidianAutoCardLink extends Plugin {
    * @param menu - 编辑器菜单实例，用于添加自定义菜单项
    * @returns void 本函数无返回值
    */
-  private onEditorMenu = (menu: Menu) => {
+  private onEditorMenu = (menu: Menu, editor: Editor, view: MarkdownView) => {
     // 根据设置决定是否显示整个菜单模块
     if (!this.settings?.showInMenuItem) return;
 
@@ -189,9 +197,7 @@ export default class ObsidianAutoCardLink extends Plugin {
         .setTitle("Paste URL and enhance to card link")
         .setIcon("paste")
         .onClick(async () => {
-          const editor = this.getEditor();
-          if (!editor) return;
-          this.manualPasteAndEnhanceURL(editor);
+          this.manualPasteAndEnhanceURL(editor, view);
         });
     });
 
@@ -204,20 +210,12 @@ export default class ObsidianAutoCardLink extends Plugin {
         .setTitle("Enhance selected URL to card link")
         .setIcon("link")
         .onClick(() => {
-          const editor = this.getEditor();
-          if (!editor) return;
-          this.enhanceSelectedURL(editor);
+          this.enhanceSelectedURL(editor, view);
         });
     });
 
     return;
   };
-
-  private getEditor(): Editor | undefined {
-    const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-    if (!view) return;
-    return view.editor;
-  }
 
   private getUrlFromLink(link: string): string {
     const urlRegex = new RegExp(linkRegex);

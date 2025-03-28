@@ -5,11 +5,26 @@ import ObsidianAutoCardLink from "src/main";
 export interface ObsidianAutoCardLinkSettings {
   showInMenuItem: boolean;
   enhanceDefaultPaste: boolean;
+  /**
+   * 来自screenshotmachine.com的密钥
+   */
+  screenshotApiKey: string;
+  /**
+   * 截图API的额外参数
+   */
+  screenshotExtraParam: string;
+  /**
+   * 生成的图片的放置位置
+   */
+  imageLocation: string;
 }
 
 export const DEFAULT_SETTINGS: ObsidianAutoCardLinkSettings = {
   showInMenuItem: true,
   enhanceDefaultPaste: false,
+  screenshotApiKey: "",
+  screenshotExtraParam: "&dimension=1024x768",
+  imageLocation: "attachments",
 };
 
 export class ObsidianAutoCardLinkSettingTab extends PluginSettingTab {
@@ -68,5 +83,86 @@ export class ObsidianAutoCardLinkSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
       });
+
+    // 添加标题 截图配置
+    containerEl.createEl("h3", { text: "Screenshot Configuration" });
+
+    // 创建并配置"截图"API的密钥
+    new Setting(containerEl)
+      .setName("Screenshot API Key")
+      .setDesc(createFragment((el)=>{
+        el.createEl("span", { text: "Get your own API key from " });
+        el.createEl("a", { text: "ScreenshotMachine Dashboard", href: "https://www.screenshotmachine.com/dashboard.php" });
+        el.createEl("span", { text: " and paste it here." });
+      }))
+      .addText((val) => {
+        if (!this.plugin.settings) return;
+        return val
+          .setValue(this.plugin.settings.screenshotApiKey)
+          .onChange(async (value) => {
+            if (!this.plugin.settings) return;
+            this.plugin.settings.screenshotApiKey = value;
+            await this.plugin.saveSettings();
+          });
+      })
+
+    // 创建并配置"截图"API的额外参数
+    new Setting(containerEl)
+      .setName("Screenshot Extra Param")
+      .setDesc(createFragment(el => {
+        // 主说明段落
+        const descParagraph = el.createEl('p');
+        descParagraph.createEl('span', { 
+          text: 'Add extra parameters to customize screenshot output. ' 
+        });
+        
+        // 文档链接
+        descParagraph.createEl('a', {
+          text: 'API Documentation',
+          href: 'https://www.screenshotmachine.com/website-screenshot-api.php#api_doc'
+        });
+        descParagraph.createEl('span', { text: ' | ' });
+        
+        // 参数生成器链接
+        descParagraph.createEl('a', {
+          text: 'Parameter Builder',
+          href: 'https://www.screenshotmachine.com/builder.php'
+        });
+        descParagraph.createEl('span', { text: '.' });
+
+        // 示例说明
+        const exampleBlock = el.createEl('div', { cls: 'setting-item-description-example' });
+        exampleBlock.createEl('p', { 
+          text: 'Example parameters (append to default options):' 
+        });
+        
+        // 预格式化的代码示例
+        const pre = exampleBlock.createEl('pre', { cls: 'cm-s-obsidian' });
+        pre.createEl('code', { 
+          text: '&device=desktop&delay=2000&cacheLimit=0' 
+        });
+
+        // 使用说明列表
+        const instructionList = el.createEl('ul');
+        instructionList.createEl('li', { 
+          text: 'Start parameters with & symbol' 
+        });
+        instructionList.createEl('li', { 
+          text: 'Multiple parameters should be concatenated (e.g., &device=tablet&delay=5000)' 
+        });
+        instructionList.createEl('li', { 
+          text: 'Do not include API key parameter' 
+        });
+      }))
+      .addText((val) => {
+        if (!this.plugin.settings) return;
+        return val
+          .setValue(this.plugin.settings.screenshotExtraParam)
+          .onChange(async (value) => {
+            if (!this.plugin.settings) return;
+            this.plugin.settings.screenshotExtraParam = value;
+            await this.plugin.saveSettings();
+          })
+      })
   }
 }

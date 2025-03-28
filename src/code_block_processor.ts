@@ -1,25 +1,35 @@
-import { App, parseYaml, Notice, ButtonComponent, getLinkPath, requestUrl, Editor, MarkdownView } from "obsidian";
+import { App, parseYaml, Notice, ButtonComponent, getLinkpath } from "obsidian";
 import { YamlParseError, NoRequiredParamsError } from "src/errors";
 import { LinkMetadata } from "src/interfaces";
 import { CheckIf } from "./checkif";
 import { CodeBlockGenerator } from "./code_block_generator";
+import { getActiveView } from "./utils/command";
+import { createDownloadImageToAttachmentFolder } from "./utils/path";
+import { ObsidianAutoCardLinkSettings } from "./settings";
+import { ImageAttachmentSaverCallback } from "./link_metadata_parser";
 
 /**
  * 卡片链接代码块处理器
  */
 export class CodeBlockProcessor {
   app: App;
+  settings: ObsidianAutoCardLinkSettings;
   source: string;
-  changeValue: (content:string)=>void;
+  changeValue: (content:string) => void;
+  saveImageToAttachment: ImageAttachmentSaverCallback;
 
   /**
    * 创建处理器实例
    * @param app - Obsidian应用实例 
    */
-  constructor(app: App, source: string, changeValue: (content:string)=>void) {
+  constructor(app: App, source: string, changeValue: (content:string)=>void, settings: ObsidianAutoCardLinkSettings) {
     this.app = app;
     this.source = source;
     this.changeValue = changeValue;
+    this.settings = settings;
+
+    const view = getActiveView(this.app)!
+    this.saveImageToAttachment = createDownloadImageToAttachmentFolder(view)
   }
 
   /**
@@ -236,7 +246,7 @@ export class CodeBlockProcessor {
     return containerEl;
   }
   async refreshMetadata(url: string) {
-    return await CodeBlockGenerator.fetchLinkMetadata(url);
+    return await CodeBlockGenerator.fetchLinkMetadata(url, this.saveImageToAttachment, this.settings);
   }
 
   private genCodeBlock(linkMetadata: LinkMetadata): string {
@@ -252,7 +262,7 @@ export class CodeBlockProcessor {
   private getLocalImagePath(link: string): string {
     link = link.slice(2, -2); // remove [[]]
     const imageRelativePath = this.app.metadataCache.getFirstLinkpathDest(
-      getLinkPath(link),
+      getLinkpath(link),
       ""
     )?.path;
 
