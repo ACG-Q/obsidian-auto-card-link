@@ -23,7 +23,7 @@ export const DEFAULT_SETTINGS: ObsidianAutoCardLinkSettings = {
   showInMenuItem: true,
   enhanceDefaultPaste: false,
   screenshotApiKey: "",
-  screenshotExtraParam: "&dimension=1024x768",
+  screenshotExtraParam: "&dimension=1280×720",
   imageLocation: "attachments",
 };
 

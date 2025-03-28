@@ -99,7 +99,7 @@ export const downloadImageToAttachmentFolder = async (
     targetFilename: string,
     vault: Vault,
     sourceFile: TFile,
-    overwrite: boolean = false
+    overwrite: boolean = true
 ): Promise<string> => {
     try {
         // 获取目标附件目录路径
@@ -131,8 +131,11 @@ export const downloadImageToAttachmentFolder = async (
         // 写入本地文件系统
         await vault.adapter.writeBinary(normalizedDestPath, response.arrayBuffer);
 
+        // 改为 /
+        const _normalizedDestPath = normalizedDestPath.replace(/\\/g, '/')
+
         // 返回Obsidian引用路径
-        return `[[${normalizedDestPath}]]`
+        return `[[${_normalizedDestPath}]]`
     } catch (error:any) {
         new Notice(`图片下载失败: ${error.message}`);
         throw error;

@@ -226,7 +226,7 @@ export class LinkMetadataParser {
    */
   private async getScreenshotUrl(url: string): Promise<string> {
     let screenshotExtraParam = this.settings?.screenshotExtraParam;
-    let apiUrl = `https://api.screenshotmachine.com?key=${this.settings!.screenshotApiKey}&url=${url}`
+    let apiUrl = `https://api.screenshotmachine.com?key=${this.settings!.screenshotApiKey}&url=${encodeURIComponent(url)}`
     if(screenshotExtraParam && screenshotExtraParam.length > 0) apiUrl += this.settings?.screenshotExtraParam;
 
     console.log(`url: ${apiUrl}\nfile: ${this.title}`)

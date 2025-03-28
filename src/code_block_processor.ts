@@ -1,4 +1,4 @@
-import { App, parseYaml, Notice, ButtonComponent, getLinkpath } from "obsidian";
+import { App, parseYaml, Notice, ButtonComponent, getLinkpath, TFile } from "obsidian";
 import { YamlParseError, NoRequiredParamsError } from "src/errors";
 import { LinkMetadata } from "src/interfaces";
 import { CheckIf } from "./checkif";
@@ -239,7 +239,7 @@ export class CodeBlockProcessor {
         if (newData) {
           this.changeValue(this.genCodeBlock(newData))
           containerEl.empty();
-          // todo: 清除原本的this.source
+          containerEl.appendChild(this.genLinkEl(newData));
         }
       });
   
@@ -260,14 +260,45 @@ export class CodeBlockProcessor {
    * @returns 完整的本地资源路径或原始链接
    */
   private getLocalImagePath(link: string): string {
-    link = link.slice(2, -2); // remove [[]]
-    const imageRelativePath = this.app.metadataCache.getFirstLinkpathDest(
-      getLinkpath(link),
+    console.debug('[getLocalImagePath] 输入链接:', link); // 调试入口参数
+    
+    const originalLink = link;
+    const match = link.match(/^\[\[(.*?)\]\]$/);
+    
+    if (!match) {
+      console.warn(`[getLocalImagePath] 无效链接格式，预期[[filename]]格式，实际收到：${link}`);
+      return originalLink;
+    }
+    
+    const [_, processedLink] = match as [string, string];
+    console.debug('[getLocalImagePath] 解析后链接:', processedLink);
+
+    var destFile = this.app.metadataCache.getFirstLinkpathDest(
+      getLinkpath(processedLink),
       ""
-    )?.path;
+    );
+    
+    if (!destFile?.path) {
+      // ll-todo: 刷新this.app.metadataCache
+      const file = this.app.vault.getAbstractFileByPath(processedLink);
+      if (file instanceof TFile) {
+        this.app.metadataCache.trigger("changed", file);
+        // 重新尝试获取
+        destFile = this.app.metadataCache.getFirstLinkpathDest(
+          getLinkpath(processedLink),
+          ""
+        );
+      }
+      return originalLink;
+    }
 
-    if (!imageRelativePath) return link;
+    const resourcePath = this.app.vault.adapter.getResourcePath(destFile.path);
+    console.debug('[getLocalImagePath] 生成资源路径:', { 
+      input: link,
+      resolvedPath: destFile.path,
+      resourcePath 
+    });
 
-    return this.app.vault.adapter.getResourcePath(imageRelativePath);
+    return resourcePath || originalLink;
   }
 }
