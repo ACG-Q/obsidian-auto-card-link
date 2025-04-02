@@ -1,21 +1,64 @@
-name: Release Obsidian plugin
+name: Lint and Format
 
 on:
   push:
+  pull_request:
 
 jobs:
   lint:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js
-        uses: actions/setup-node@v1
+      - name: Checkout code
+        uses: actions/checkout@v4
+        env:
+          GIT_LOG: ${{ github.event.head_commit.message }}
+        run: |
+          echo "ℹ️ 正在检出代码库..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "触发提交: $GITHUB_SHA"
+          echo "提交信息: $GIT_LOG"
+          echo "分支: $GITHUB_REF_NAME"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "14.x"
+          node-version: "16.x"
+          cache: 'npm'
+        run: |
+          echo "✅ Node.js 环境已配置"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          node -v
+          npm -v
+
+      - name: Install dependencies
+        run: |
+          echo "📦 正在安装项目依赖..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          npm install
+          echo "已安装依赖项:"
+          npm list --depth=0
 
       - name: Lint
         id: lint
         run: |
-          yarn install
-          yarn lint
+          echo "🔍 正在执行代码检查..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          npm run lint
+          echo "✅ 代码检查完成"
+
+      - name: Format code
+        id: format
+        run: |
+          echo "🔧 正在格式化代码..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          npm run fix
+          echo "✅ 代码格式化完成"
+
+      - name: Log completion status
+        if: success()
+        run: |
+          echo "✅ 代码检查和格式化成功完成"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "分支: $GITHUB_REF_NAME"
+          echo "完成时间: $(date +'%Y-%m-%d %H:%M:%S %Z')"

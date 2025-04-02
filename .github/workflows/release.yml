@@ -1,87 +1,114 @@
-name: Release Obsidian plugin
+name: Release Obsidian Plugin
 
 on:
   push:
     tags:
-      - "*"
+      - "v*"
 
 env:
   PLUGIN_NAME: auto-card-link
+  BUILD_DIR: dist
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js
-        uses: actions/setup-node@v1
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          node-version: "14.x"
-
-      - name: Build
-        id: build
+          fetch-depth: 0
+        env:
+          GIT_LOG: ${{ github.event.head_commit.message }}
         run: |
-          yarn install
-          yarn build
-          mkdir ${{ env.PLUGIN_NAME }}
-          cp main.js manifest.json styles.css ${{ env.PLUGIN_NAME }}
-          zip -r ${{ env.PLUGIN_NAME }}.zip ${{ env.PLUGIN_NAME }}
-          ls
-          echo "::set-output name=tag_name::$(git tag --sort version:refname | tail -n 1)"
+          echo "ℹ️ 正在检出代码库..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "触发提交: $GITHUB_SHA"
+          echo "提交信息: $GIT_LOG"
+          echo "标签版本: $GITHUB_REF_NAME"
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ github.ref }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          node-version: "18.x"
+          cache: "npm"
+        run: |
+          echo "✅ Node.js 环境已配置"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          node -v
+          npm -v
+
+      - name: Install dependencies
+        run: |
+          echo "📦 正在安装项目依赖..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          npm ci --prefer-offline
+          echo "已安装依赖项:"
+          npm list --depth=0
+
+      - name: Build project
+        run: |
+          echo "🏗️ 开始构建项目..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          npm run build
+          echo "生成的文件列表:"
+          ls -l dist
+
+      - name: Package artifacts
+        id: package
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          OUTPUT_DIR="${{ env.BUILD_DIR }}/${{ env.PLUGIN_NAME }}"
+          
+          echo "📦 打包版本: v$VERSION"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "输出目录: $OUTPUT_DIR"
+          
+          mkdir -p $OUTPUT_DIR
+          echo "复制核心文件..."
+          cp -v {main.js,manifest.json,styles.css} $OUTPUT_DIR
+          
+          echo "最终打包内容:"
+          tree $OUTPUT_DIR
+          
+          cd ${{ env.BUILD_DIR }}
+          echo "正在创建 ZIP 包..."
+          zip -r ${{ env.PLUGIN_NAME }}-$VERSION.zip ${{ env.PLUGIN_NAME }}
+          
+          echo "生成元数据:"
+          echo "zip_name=${{ env.PLUGIN_NAME }}-$VERSION.zip" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          echo "📦 包文件信息:"
+          ls -lh ${{ env.PLUGIN_NAME }}-*.zip
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: "v${{ steps.package.outputs.version }}"
+          body: "Auto-generated release for version ${{ steps.package.outputs.version }}"
           draft: false
-          prerelease: false
-
-      - name: Upload zip file
-        id: upload-zip
-        uses: actions/upload-release-asset@v1
+          prerelease: ${{ contains(github.ref, '-') }}
+          files: |
+            ${{ env.BUILD_DIR }}/${{ steps.package.outputs.zip_name }}
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ env.PLUGIN_NAME }}.zip
-          asset_name: ${{ env.PLUGIN_NAME }}-${{ steps.build.outputs.tag_name }}.zip
-          asset_content_type: application/zip
+        run: |
+          echo "🚀 正在创建发布..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "发布版本: v${{ steps.package.outputs.version }}"
+          echo "包文件路径: ${{ env.BUILD_DIR }}/${{ steps.package.outputs.zip_name }}"
+          echo "预发布标记: ${{ contains(github.ref, '-') }}"
 
-      - name: Upload main.js
-        id: upload-main
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./main.js
-          asset_name: main.js
-          asset_content_type: text/javascript
-
-      - name: Upload manifest.json
-        id: upload-manifest
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./manifest.json
-          asset_name: manifest.json
-          asset_content_type: application/json
-
-      - name: Upload styles.css
-        id: upload-css
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./styles.css
-          asset_name: styles.css
-          asset_content_type: text/css
+      - name: Log release status
+        if: success()
+        run: |
+          echo "✅ 发布成功完成"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "最终版本号: v${{ steps.package.outputs.version }}"
+          echo "包文件名称: ${{ steps.package.outputs.zip_name }}"
+          echo "文件大小: $(du -h ${{ env.BUILD_DIR }}/${{ steps.package.outputs.zip_name }} | cut -f1)"
+          echo "发布时间: $(date +'%Y-%m-%d %H:%M:%S %Z')"
