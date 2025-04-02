@@ -1,16 +1,20 @@
 import { Editor, EditorPosition } from "obsidian";
-
-import { linkLineRegex, lineRegex } from "src/regex";
+import { urlRegex, lineRegex, linkRegex, linkLineRegex } from "../../utils/regex";
 
 /**
  * 表示文本边界的位置信息
  */
-interface WordBoundaries {
+export interface WordBoundaries {
   start: { line: number; ch: number };
   end: { line: number; ch: number };
 }
 
+/**
+ * 编辑器扩展功能类
+ * 提供编辑器相关的增强功能，如文本选择、位置计算等
+ */
 export class EditorExtensions {
+
   /**
    * 获取编辑器当前选中的文本内容，当没有选中内容时自动选中光标所在单词
    * @param editor - 编辑器实例，用于操作选区内容和获取选区信息
@@ -46,7 +50,7 @@ export class EditorExtensions {
    * @param editor - 编辑器实例，用于获取光标位置和行内容
    * @returns 包含单词起始和结束位置的边界对象。当未找到有效边界时返回光标当前位置
    */
-  private static getWordBoundaries(editor: Editor): WordBoundaries {
+  public static getWordBoundaries(editor: Editor): WordBoundaries {
     const cursor = editor.getCursor();
 
     // 如果当前行包含Markdown链接格式（如[...](...)）

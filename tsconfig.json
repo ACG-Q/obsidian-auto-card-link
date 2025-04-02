@@ -5,6 +5,12 @@
     "target": "ES6",
     "strict": true,
     "moduleResolution": "node",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "paths": {
+      "src/*": ["src/*"]
+    }
   },
   "include": [
     "**/*.ts"

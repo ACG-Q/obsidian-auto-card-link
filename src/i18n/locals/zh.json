@@ -1,0 +1,98 @@
+{
+  "plugin": {
+    "name": "自动卡片链接",
+    "description": "自动将URL转换为美观的卡片式链接"
+  },
+  "settings": {
+    "title": "自动卡片链接设置",
+    "general": {
+      "title": "常规设置",
+      "autoConvert": "自动转换URL为卡片链接",
+      "autoConvertDescription": "自动将粘贴的URL转换为卡片链接",
+      "defaultCardStyle": "默认卡片样式",
+      "cacheTimeout": "缓存超时时间（分钟）",
+      "cacheTimeoutDescription": "元数据缓存过期时间",
+      "showInMenu": "在菜单项中添加命令",
+      "showInMenuDescription": "是否在右键菜单项中添加命令"
+    },
+    "appearance": {
+      "title": "外观",
+      "showFavicon": "显示网站图标",
+      "showImage": "显示预览图片",
+      "showDescription": "显示描述",
+      "maxDescriptionLength": "最大描述长度"
+    },
+    "screenshot": {
+      "title": "截图配置",
+      "apiKey": "截图API密钥",
+      "apiKeyDescPart1": "从 ",
+      "apiKeyDashboard": "ScreenshotMachine仪表板",
+      "apiKeyDescPart2": " 获取您自己的API密钥并粘贴到此处",
+      "extraParams": "截图额外参数",
+      "extraParamsDesc": "添加额外参数以自定义截图输出。",
+      "apiDocs": "API文档",
+      "paramBuilder": "参数生成器",
+      "periodMark": "。",
+      "exampleParams": "示例参数（附加到默认选项）：",
+      "paramTip1": "参数以&符号开头",
+      "paramTip2": "多个参数应连接在一起（例如，&device=tablet&delay=5000）",
+      "paramTip3": "不要包含API密钥参数"
+    },
+    "advanced": {
+      "title": "高级设置",
+      "requestTimeout": "请求超时时间（秒）",
+      "maxRetries": "最大重试次数",
+      "userAgent": "自定义User-Agent",
+      "preferLocalImages": "优先使用本地图片",
+      "preferLocalImagesDescription": "如果可用，优先使用本地图片而不是远程图片",
+      "downloadImages": "下载图片到本地",
+      "downloadImagesDescription": "将远程图片下载到本地附件文件夹",
+      "showSuccessNotice": "显示成功通知",
+      "showSuccessNoticeDescription": "在成功创建卡片链接后显示通知",
+      "indentLevel": "缩进级别",
+      "indentLevelDescription": "卡片链接代码块的缩进级别"
+    }
+  },
+  "commands": {
+    "pasteAndEnhance": "粘贴URL并增强为卡片链接",
+    "enhanceSelectedUrl": "增强选中的URL为卡片链接",
+    "convertToCardLink": "转换为卡片链接",
+    "refreshCardLink": "刷新卡片链接"
+  },
+  "errors": {
+    "networkError": "获取URL失败：{{message}}",
+    "parseError": "解析内容失败：{{message}}",
+    "timeoutError": "请求超时：{{url}}",
+    "noMetadata": "未找到URL的元数据：{{url}}",
+    "processorError": "处理器错误",
+    "invalidUrl": "无效的URL格式",
+    "internalLinkQuotes": "内部链接必须用引号括起来",
+    "unknownError": "发生未知错误",
+    "buttonContainerNotFound": "未找到按钮容器",
+    "yamlParseError": "解析YAML失败，请查看调试控制台获取更多详情",
+    "missingRequiredParams": "缺少必需参数[url, title]",
+    "refreshMetadataFailed": "刷新元数据失败",
+    "fetchPageFailed": "获取页面失败，状态码：{{status}}",
+    "saveImageFailed": "保存图片到附件文件夹失败",
+    "abortError": "请求被中止：{{message}}",
+    "fetchMetadataFailed": "获取链接元数据失败",
+    "saveImageAttachmentFailed": "保存图片附件失败",
+    "fetchLinkMetadataFailed": "获取链接元数据失败"
+  },
+  "ui": {
+    "loading": "加载中...",
+    "noDescription": "暂无描述",
+    "visitWebsite": "访问网站",
+    "cardLinkRefreshed": "卡片链接已刷新",
+    "refreshingLinkMetadata": "正在刷新链接元数据...",
+    "cardLinkMetadataRefreshed": "🔄 卡片链接元数据已刷新",
+    "refreshMetadata": "刷新元数据",
+    "fetchingLinkMetadata": "正在获取链接元数据...",
+    "cardLinkCreated": "链接卡片创建成功",
+    "copyUrl": "复制链接",
+    "urlCopied": "链接已复制到剪贴板"
+  },
+  "debug": {
+    "legacyModeSaveImage": "传统模式：将保存图片"
+  }
+}

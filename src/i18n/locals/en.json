@@ -1,0 +1,98 @@
+{
+  "plugin": {
+    "name": "Auto Card Link",
+    "description": "Automatically convert URLs to beautiful card links"
+  },
+  "settings": {
+    "title": "Auto Card Link Settings",
+    "general": {
+      "title": "General Settings",
+      "autoConvert": "Auto convert URLs to card links",
+      "autoConvertDescription": "Automatically convert pasted URLs to card links",
+      "defaultCardStyle": "Default card style",
+      "cacheTimeout": "Cache timeout (minutes)",
+      "cacheTimeoutDescription": "Time before metadata cache expires",
+      "showInMenu": "Add commands to menu items",
+      "showInMenuDescription": "Whether to add commands to the right-click menu"
+    },
+    "appearance": {
+      "title": "Appearance",
+      "showFavicon": "Show website favicon",
+      "showImage": "Show preview image",
+      "showDescription": "Show description",
+      "maxDescriptionLength": "Max description length"
+    },
+    "screenshot": {
+      "title": "Screenshot Settings",
+      "apiKey": "Screenshot API Key",
+      "apiKeyDescPart1": "Get your API key from ",
+      "apiKeyDashboard": "ScreenshotMachine Dashboard",
+      "apiKeyDescPart2": " and paste it here",
+      "extraParams": "Extra Parameters",
+      "extraParamsDesc": "Add extra parameters to customize screenshot output. ",
+      "apiDocs": "API Documentation",
+      "paramBuilder": "Parameter Builder",
+      "periodMark": ".",
+      "exampleParams": "Example parameters (appended to defaults):",
+      "paramTip1": "Parameters start with & symbol",
+      "paramTip2": "Multiple parameters should be chained together (e.g., &device=tablet&delay=5000)",
+      "paramTip3": "Do not include API key parameter"
+    },
+    "advanced": {
+      "title": "Advanced Settings",
+      "requestTimeout": "Request timeout (seconds)",
+      "maxRetries": "Max retry attempts",
+      "userAgent": "Custom User-Agent",
+      "preferLocalImages": "Prefer local images",
+      "preferLocalImagesDescription": "Use local images instead of remote ones when available",
+      "downloadImages": "Download images locally",
+      "downloadImagesDescription": "Download remote images to local attachment folder",
+      "showSuccessNotice": "Show success notifications",
+      "showSuccessNoticeDescription": "Show notification after successfully creating card links",
+      "indentLevel": "Indent level",
+      "indentLevelDescription": "Indentation level for card link code blocks"
+    }
+  },
+  "commands": {
+    "pasteAndEnhance": "Paste and enhance URLs",
+    "enhanceSelectedUrl": "Enhance selected URL",
+    "convertToCardLink": "Convert to Card Link",
+    "refreshCardLink": "Refresh Card Link"
+  },
+  "errors": {
+    "networkError": "Failed to fetch URL: {{message}}",
+    "parseError": "Failed to parse content: {{message}}",
+    "timeoutError": "Request timed out: {{url}}",
+    "noMetadata": "No metadata found for URL: {{url}}",
+    "processorError": "Processor error",
+    "invalidUrl": "Invalid URL format",
+    "internalLinkQuotes": "Internal links must be surrounded by quotes",
+    "unknownError": "Unknown error occurred",
+    "buttonContainerNotFound": "Button container not found",
+    "yamlParseError": "Failed to parse YAML. Check debug console for more detail",
+    "missingRequiredParams": "Required parameters [url, title] are not found",
+    "refreshMetadataFailed": "Failed to refresh metadata",
+    "fetchPageFailed": "Failed to fetch page. Status code: {{status}}",
+    "saveImageFailed": "Failed to save image to attachment folder",
+    "abortError": "Request aborted: {{message}}",
+    "fetchMetadataFailed": "Failed to fetch link metadata",
+    "saveImageAttachmentFailed": "Failed to save image attachment",
+    "fetchLinkMetadataFailed": "Failed to fetch link metadata"
+  },
+  "ui": {
+    "loading": "Loading...",
+    "noDescription": "No description available",
+    "visitWebsite": "Visit website",
+    "cardLinkRefreshed": "Card link refreshed",
+    "refreshingLinkMetadata": "Refreshing link metadata...",
+    "cardLinkMetadataRefreshed": "🔄 Card link metadata refreshed",
+    "refreshMetadata": "Refresh metadata",
+    "fetchingLinkMetadata": "Fetching link metadata...",
+    "cardLinkCreated": "Card link created successfully",
+    "copyUrl": "Copy URL",
+    "urlCopied": "URL copied to your clipboard"
+  },
+  "debug": {
+    "legacyModeSaveImage": "Legacy mode: would save image"
+  }
+}

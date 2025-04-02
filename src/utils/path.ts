@@ -10,6 +10,7 @@ declare module "obsidian" {
              */
             attachmentFolderPath?: string;
         };
+        getConfig: (key: string) => string | undefined;
     }
 }
 
@@ -101,6 +102,9 @@ export const downloadImageToAttachmentFolder = async (
     sourceFile: TFile,
     overwrite: boolean = true
 ): Promise<string> => {
+    console.log("Downloading image from", imageUrl);
+    console.log("Target filename", targetFilename);
+
     try {
         // 获取目标附件目录路径
         const attachmentDir = getAttachmentFolderPath(vault, sourceFile);
@@ -134,6 +138,8 @@ export const downloadImageToAttachmentFolder = async (
         // 改为 /
         const _normalizedDestPath = normalizedDestPath.replace(/\\/g, '/')
 
+        console.log("Image downloaded and saved to", _normalizedDestPath);
+
         // 返回Obsidian引用路径
         return `[[${_normalizedDestPath}]]`
     } catch (error:any) {
@@ -143,7 +149,8 @@ export const downloadImageToAttachmentFolder = async (
 };
 
 
-export const createDownloadImageToAttachmentFolder = (view: MarkdownView) => {
+export const createDownloadImageToAttachmentFolder = (view: MarkdownView|null) => {
+    if(!view) return;
     const vault = view.app.vault;
     const file = view.file;
 
