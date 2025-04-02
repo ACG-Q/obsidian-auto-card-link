@@ -25,7 +25,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "16.x"
+          node-version: "22.x"
           cache: 'npm'
           
       - name: Log Node.js info
@@ -43,14 +43,6 @@ jobs:
           echo "已安装依赖项:"
           npm list --depth=0
 
-      - name: Lint
-        id: lint
-        run: |
-          echo "🔍 正在执行代码检查..."
-          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-          npm run lint
-          echo "✅ 代码检查完成"
-
       - name: Format code
         id: format
         run: |
@@ -59,6 +51,14 @@ jobs:
           npm run fix
           echo "✅ 代码格式化完成"
 
+      - name: Lint
+        id: lint
+        run: |
+          echo "🔍 正在执行代码检查..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          npm run lint
+          echo "✅ 代码检查完成"
+
       - name: Log completion status
         if: success()
         run: |
@@ -66,3 +66,4 @@ jobs:
           echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
           echo "分支: $GITHUB_REF_NAME"
           echo "完成时间: $(date +'%Y-%m-%d %H:%M:%S %Z')"
+          echo "所有步骤已成功完成"
