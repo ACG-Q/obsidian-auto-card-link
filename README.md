@@ -34,6 +34,7 @@ The code block `cardlink` uses YAML syntax for displaying card-styled link.
 
 ## example
 
+```
 ​```cardlink
 url: https://obsidian.md/
 title: "Obsidian"
@@ -42,6 +43,7 @@ host: obsidian.md
 favicon: https://obsidian.md/favicon.ico
 image: https://obsidian.md/images/banner.png
 ​```
+```
 
 # Customizing Style
 Card-styled link is styled by [styles.css](./styles.css). To customize, you can try making [CSS snippets](https://help.obsidian.md/How+to/Add+custom+styles#Use+Themes+and+or+CSS+snippets).

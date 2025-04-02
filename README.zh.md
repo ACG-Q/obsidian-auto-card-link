@@ -33,6 +33,7 @@
 
 ## 示例
 
+```
 ​```cardlink
 url: https://obsidian.md/
 title: "Obsidian"
@@ -41,6 +42,7 @@ host: obsidian.md
 favicon: https://obsidian.md/favicon.ico
 image: https://obsidian.md/images/banner.png
 ​```
+```
 
 # 自定义样式
 卡片式链接由[styles.css](./styles.css)样式化。要自定义，您可以尝试制作[CSS片段](https://help.obsidian.md/How+to/Add+custom+styles#Use+Themes+and+or+CSS+snippets)。
