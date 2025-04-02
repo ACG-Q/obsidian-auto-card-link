@@ -10,7 +10,7 @@
     "lint": "tsc --noEmit && eslint . --ext .ts",
     "fix": "eslint . --fix --ext .ts",
     "test": "jest",
-    "version": "node version-bump.js && git add manifest.json versions.json"
+    "version": "node version-bump.js"
   },
   "repository": {
     "type": "git",

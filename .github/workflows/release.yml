@@ -50,6 +50,14 @@ jobs:
           echo "已安装依赖项:"
           npm list --depth=0
 
+      - name: Set Version
+        run: |
+          echo "ℹ️ 正在设置版本号..."
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "当前版本号: ${{ github.ref_name }}"
+          npm version ${{ github.ref_name }} --no-git-tag-version
+          npm run version
+
       - name: Build project
         run: |
           echo "🏗️ 开始构建项目..."
@@ -117,3 +125,11 @@ jobs:
           echo "包文件名称: ${{ steps.package.outputs.zip_name }}"
           echo "文件大小: $(du -h ${{ env.BUILD_DIR }}/${{ steps.package.outputs.zip_name }} | cut -f1)"
           echo "发布时间: $(date +'%Y-%m-%d %H:%M:%S %Z')"
+    
+      - name: Commit changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add main.js manifest.json styles.css
+          git commit -m "chore: update version to ${{ github.ref_name }}"
+          git push
